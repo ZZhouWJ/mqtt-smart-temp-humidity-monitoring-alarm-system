@@ -18,8 +18,19 @@ public class AlarmService {
     private double humidityHigh;
 
     public void fillAlarmInfo(ProcessedSensorData data) {
-        boolean tempHigh = data.getFilteredTemperature() != null && data.getFilteredTemperature() >= temperatureHigh;
-        boolean humHigh = data.getFilteredHumidity() != null && data.getFilteredHumidity() >= humidityHigh;
+        boolean explicitJump = "jump".equalsIgnoreCase(data.getRawStatus());
+        boolean tempHigh = !explicitJump && (
+                "temp_high".equalsIgnoreCase(data.getRawStatus())
+                        || "both_high".equalsIgnoreCase(data.getRawStatus())
+                        || isAbove(data.getRawTemperature(), temperatureHigh)
+                        || isAbove(data.getFilteredTemperature(), temperatureHigh)
+        );
+        boolean humHigh = !explicitJump && (
+                "humidity_high".equalsIgnoreCase(data.getRawStatus())
+                        || "both_high".equalsIgnoreCase(data.getRawStatus())
+                        || isAbove(data.getRawHumidity(), humidityHigh)
+                        || isAbove(data.getFilteredHumidity(), humidityHigh)
+        );
         boolean outlier = Boolean.TRUE.equals(data.getOutlier());
         boolean packetLoss = Boolean.TRUE.equals(data.getPacketLoss());
         boolean offline = "offline".equalsIgnoreCase(data.getDeviceStatus());
@@ -46,6 +57,10 @@ public class AlarmService {
             data.setAlarmType("NORMAL");
             data.setAlarmMessage("环境状态正常");
         }
+    }
+
+    private boolean isAbove(Double value, double threshold) {
+        return value != null && value >= threshold;
     }
 
     public boolean isAlarm(ProcessedSensorData data) {

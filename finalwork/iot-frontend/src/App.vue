@@ -11,8 +11,8 @@
     </header>
 
     <section class="cards">
-      <DataCard label="当前温度" :value="displayTemp" sub="滤波后温度 / ℃" :danger="isTempAlarm" />
-      <DataCard label="当前湿度" :value="displayHumidity" sub="滤波后湿度 / %RH" :danger="isHumidityAlarm" />
+      <DataCard label="当前温度" :value="displayTemp" sub="原始实时温度 / ℃" :danger="isTempAlarm" />
+      <DataCard label="当前湿度" :value="displayHumidity" sub="原始实时湿度 / %RH" :danger="isHumidityAlarm" />
       <DataCard label="设备状态" :value="latest?.deviceStatus || 'waiting'" :sub="latest?.rawStatus || '等待数据'" :danger="latest?.deviceStatus === 'offline'" />
       <DataCard label="报警状态" :value="latest?.alarmType || 'WAITING'" :sub="latest?.alarmMessage || '等待后端推送'" :danger="latest?.alarmType && latest?.alarmType !== 'NORMAL'" />
     </section>
@@ -74,8 +74,8 @@ const filteredTemps = computed(() => history.value.map(x => x.filteredTemperatur
 const rawHumidities = computed(() => history.value.map(x => x.rawHumidity))
 const filteredHumidities = computed(() => history.value.map(x => x.filteredHumidity))
 
-const displayTemp = computed(() => latest.value?.filteredTemperature ?? '--')
-const displayHumidity = computed(() => latest.value?.filteredHumidity ?? '--')
+const displayTemp = computed(() => latest.value?.rawTemperature ?? '--')
+const displayHumidity = computed(() => latest.value?.rawHumidity ?? '--')
 const isTempAlarm = computed(() => ['TEMP_HIGH', 'BOTH_HIGH'].includes(latest.value?.alarmType))
 const isHumidityAlarm = computed(() => ['HUMIDITY_HIGH', 'BOTH_HIGH'].includes(latest.value?.alarmType))
 

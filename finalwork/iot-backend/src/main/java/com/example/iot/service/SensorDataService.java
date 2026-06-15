@@ -43,9 +43,16 @@ public class SensorDataService {
         }
         lastSeq = raw.getSeq();
 
-        boolean outlier = filterService.isOutlier(raw) || "jump".equalsIgnoreCase(raw.getStatus());
-        double filteredTemp = filterService.filterTemperature(raw, outlier);
-        double filteredHumidity = filterService.filterHumidity(raw, outlier);
+        boolean thresholdOutlier = filterService.isOutlier(raw);
+        boolean explicitJump = "jump".equalsIgnoreCase(raw.getStatus());
+        boolean explicitLimitAlarm = isLimitAlarmStatus(raw.getStatus());
+        boolean outlier = explicitJump || (!explicitLimitAlarm && thresholdOutlier);
+
+        // 超温/超湿演示样本可能在数值上也是一次大跳变，但它们应优先作为环境报警展示；
+        // 同时仍不让这类单点大幅变化进入滤波窗口，避免污染后续平滑曲线。
+        boolean excludeFromFilter = explicitJump || thresholdOutlier;
+        double filteredTemp = filterService.filterTemperature(raw, excludeFromFilter);
+        double filteredHumidity = filterService.filterHumidity(raw, excludeFromFilter);
 
         ProcessedSensorData processed = new ProcessedSensorData();
         processed.setDeviceId(raw.getDeviceId());
@@ -77,6 +84,12 @@ public class SensorDataService {
 
         webSocketHandler.broadcast(processed);
         return processed;
+    }
+
+    private boolean isLimitAlarmStatus(String status) {
+        return "temp_high".equalsIgnoreCase(status)
+                || "humidity_high".equalsIgnoreCase(status)
+                || "both_high".equalsIgnoreCase(status);
     }
 
     public ProcessedSensorData latest() {
