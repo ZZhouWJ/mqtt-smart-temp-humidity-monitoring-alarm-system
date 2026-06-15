@@ -1,0 +1,49 @@
+services:
+  emqx:
+    image: emqx/emqx:5.8
+    container_name: iot-emqx
+    ports:
+      - "1883:1883"     # MQTT TCP
+      - "18083:18083"   # EMQX 管理后台，默认账号 admin / public
+    environment:
+      - EMQX_DASHBOARD__DEFAULT_USERNAME=admin
+      - EMQX_DASHBOARD__DEFAULT_PASSWORD=public
+    healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  backend:
+    build: ./iot-backend
+    container_name: iot-backend
+    depends_on:
+      - emqx
+    ports:
+      - "8080:8080"
+    environment:
+      - MQTT_BROKER=tcp://emqx:1883
+      - MQTT_TOPIC=iot/env/node001/data
+      - TEMP_HIGH_THRESHOLD=35.0
+      - HUMIDITY_HIGH_THRESHOLD=80.0
+      - FILTER_WINDOW_SIZE=5
+
+  frontend:
+    build: ./iot-frontend
+    container_name: iot-frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+  sensor-simulator:
+    build: ./sensor-simulator
+    container_name: iot-sensor-simulator
+    depends_on:
+      - emqx
+    environment:
+      - MQTT_HOST=emqx
+      - MQTT_PORT=1883
+      - MQTT_TOPIC=iot/env/node001/data
+      - PUBLISH_INTERVAL=1
+    restart: unless-stopped
