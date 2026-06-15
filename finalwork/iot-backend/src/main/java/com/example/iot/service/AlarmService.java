@@ -19,19 +19,17 @@ public class AlarmService {
 
     public void fillAlarmInfo(ProcessedSensorData data) {
         boolean explicitJump = "jump".equalsIgnoreCase(data.getRawStatus());
-        boolean tempHigh = !explicitJump && (
-                "temp_high".equalsIgnoreCase(data.getRawStatus())
-                        || "both_high".equalsIgnoreCase(data.getRawStatus())
-                        || isAbove(data.getRawTemperature(), temperatureHigh)
-                        || isAbove(data.getFilteredTemperature(), temperatureHigh)
-        );
-        boolean humHigh = !explicitJump && (
-                "humidity_high".equalsIgnoreCase(data.getRawStatus())
-                        || "both_high".equalsIgnoreCase(data.getRawStatus())
-                        || isAbove(data.getRawHumidity(), humidityHigh)
-                        || isAbove(data.getFilteredHumidity(), humidityHigh)
-        );
         boolean outlier = Boolean.TRUE.equals(data.getOutlier());
+        boolean explicitTempHigh = "temp_high".equalsIgnoreCase(data.getRawStatus())
+                || "both_high".equalsIgnoreCase(data.getRawStatus());
+        boolean explicitHumidityHigh = "humidity_high".equalsIgnoreCase(data.getRawStatus())
+                || "both_high".equalsIgnoreCase(data.getRawStatus());
+        boolean measuredTempHigh = isAbove(data.getRawTemperature(), temperatureHigh)
+                || isAbove(data.getFilteredTemperature(), temperatureHigh);
+        boolean measuredHumidityHigh = isAbove(data.getRawHumidity(), humidityHigh)
+                || isAbove(data.getFilteredHumidity(), humidityHigh);
+        boolean tempHigh = !explicitJump && (explicitTempHigh || (!outlier && measuredTempHigh));
+        boolean humHigh = !explicitJump && (explicitHumidityHigh || (!outlier && measuredHumidityHigh));
         boolean packetLoss = Boolean.TRUE.equals(data.getPacketLoss());
         boolean offline = "offline".equalsIgnoreCase(data.getDeviceStatus());
 
