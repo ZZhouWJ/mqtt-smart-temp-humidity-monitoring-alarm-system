@@ -5,11 +5,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@lottiefiles/dotlottie-wc": "^0.9.16",
     "@vitejs/plugin-vue": "latest",
+    "axios": "latest",
+    "echarts": "latest",
     "vite": "latest",
     "vue": "latest",
-    "echarts": "latest",
-    "axios": "latest"
-  },
-  "devDependencies": {}
+    "vue-router": "^4.6.4"
+  }
 }

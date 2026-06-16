@@ -1,34 +1,190 @@
-* { box-sizing: border-box; }
-body { margin: 0; font-family: Inter, "Microsoft YaHei", Arial, sans-serif; background: #07111f; color: #eaf2ff; }
-.dashboard { min-height: 100vh; padding: 24px; background: radial-gradient(circle at top left, #15345e 0, #07111f 42%, #050912 100%); }
-.header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
-h1 { margin: 0; font-size: 28px; letter-spacing: 0.5px; }
-p { margin: 8px 0 0; color: #9fb3d1; }
-.status-pill { padding: 10px 16px; border-radius: 999px; font-weight: 700; background: #2b3950; }
-.status-pill.ok { background: rgba(39, 174, 96, 0.25); color: #4df090; }
-.status-pill.bad { background: rgba(231, 76, 60, 0.25); color: #ff8d7f; }
-.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 18px; }
-.data-card { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 18px; min-height: 128px; box-shadow: 0 12px 40px rgba(0,0,0,0.25); }
-.data-card.danger { border-color: rgba(255,90,90,0.8); background: rgba(160,20,30,0.32); animation: pulse 1.2s infinite alternate; }
-.label { color: #9fb3d1; font-size: 14px; }
-.value { font-size: 34px; font-weight: 800; margin-top: 14px; word-break: break-all; }
-.sub { margin-top: 8px; color: #b9c7db; font-size: 13px; }
-.main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
-.charts { display: grid; gap: 18px; }
-.chart { height: 300px; border-radius: 20px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); }
-.panel, .log-panel { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; padding: 16px; }
-.panel-title { font-size: 18px; font-weight: 800; margin-bottom: 14px; }
-.empty { color: #9fb3d1; padding: 16px 0; }
-.alarm-item { padding: 12px; border-radius: 14px; margin-bottom: 10px; background: rgba(255,88,88,0.13); border: 1px solid rgba(255,88,88,0.28); }
-.alarm-type { font-weight: 800; color: #ffadad; }
-.alarm-msg { margin-top: 4px; }
-.alarm-time { margin-top: 4px; font-size: 12px; color: #9fb3d1; }
-.log-panel { margin-top: 18px; overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; color: #d9e7fa; }
-th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.09); }
-th { color: #9fb3d1; }
-@keyframes pulse { from { box-shadow: 0 0 0 rgba(255,90,90,0.2); } to { box-shadow: 0 0 24px rgba(255,90,90,0.55); } }
-@media (max-width: 1100px) { .cards { grid-template-columns: repeat(2, 1fr); } .main-grid { grid-template-columns: 1fr; } }
+/* ============================================
+   Industrial Control Aesthetic
+   深色控制台风格 - 工业物联网监控设计
+   ============================================ */
 
-.alarm-advice { margin-top: 6px; font-size: 12px; line-height: 1.5; color: #ffd6a8; }
-.advice-cell { min-width: 220px; color: #ffd6a8; }
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* 主色：电光蓝 + 琥珀橙 */
+  --color-primary: #00d9ff;
+  --color-primary-soft: rgba(0, 217, 255, 0.15);
+  --color-primary-glow: rgba(0, 217, 255, 0.4);
+  --color-accent: #ff9e00;
+  --color-accent-soft: rgba(255, 158, 0, 0.15);
+
+  /* 状态色 */
+  --color-success: #00ff9d;
+  --color-success-soft: rgba(0, 255, 157, 0.12);
+  --color-warning: #ffb800;
+  --color-warning-soft: rgba(255, 184, 0, 0.12);
+  --color-danger: #ff3860;
+  --color-danger-soft: rgba(255, 56, 96, 0.12);
+  --color-info: #4cc9f0;
+  --color-info-soft: rgba(76, 201, 240, 0.12);
+
+  /* 深色面板系统 */
+  --color-bg: #0a0e1a;
+  --color-bg-elevated: #0f1525;
+  --color-surface: #141a2e;
+  --color-surface-hover: #1a2238;
+  --color-surface-elevated: #1f2742;
+
+  /* 边框与分隔 */
+  --color-border: rgba(0, 217, 255, 0.12);
+  --color-border-strong: rgba(0, 217, 255, 0.25);
+  --color-border-subtle: rgba(255, 255, 255, 0.06);
+
+  /* 文字层级 */
+  --color-text-primary: #e8edf5;
+  --color-text-secondary: #8b96b0;
+  --color-text-tertiary: #5a6480;
+  --color-text-inverse: #0a0e1a;
+
+  /* 字体 */
+  --font-display: 'Space Grotesk', 'Noto Sans SC', sans-serif;
+  --font-body: 'Noto Sans SC', 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  /* 间距 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* 圆角 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* 阴影 - 发光效果 */
+  --shadow-glow: 0 0 20px rgba(0, 217, 255, 0.15);
+  --shadow-glow-strong: 0 0 30px rgba(0, 217, 255, 0.3);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+
+  /* 动画 */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+}
+
+/* ============================================
+   Base
+   ============================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background: var(--color-bg);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* 网格背景纹理 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 217, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 217, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+  mask-image: radial-gradient(ellipse at center, black 0%, transparent 80%);
+}
+
+/* 顶部光晕 */
+body::after {
+  content: '';
+  position: fixed;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 400px;
+  background: radial-gradient(ellipse, rgba(0, 217, 255, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+::selection {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+.glow-text {
+  text-shadow: 0 0 10px currentColor;
+}
+
+.mono { font-family: var(--font-mono); }
+
+.pulse-dot {
+  position: relative;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.pulse-dot::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.3;
+  animation: ping 2s ease-in-out infinite;
+}
+
+@keyframes ping {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* 扫描线效果 */
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}

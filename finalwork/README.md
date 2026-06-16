@@ -1,58 +1,204 @@
-# 基于 MQTT 与 Spring Boot 的智能温湿度环境监测与异常报警系统
+# 基于 MQTT 协议的模拟环境监测物联网系统
 
-本项目为物联网技术开发课程设计题目一的工程化实现。系统使用 Python 模拟温湿度采集节点，通过 MQTT 发布 JSON 数据，Spring Boot 后端订阅并完成滤波、丢包检测、报警判断和本地规则诊断，Vue + ECharts 前端实时展示曲线、设备状态和报警记录。
+## 快速导航
+
+| 文档 | 说明 |
+|------|------|
+| [docs/PPT汇报稿.md](docs/PPT汇报稿.md) | 完整 PPT 汇报内容（每页讲什么） |
+| [docs/答辩防守问题.md](docs/答辩防守问题.md) | 答辩可能被问的问题及参考答案 |
+
+## 项目概述
+
+本项目为物联网技术课程设计题目一的工程化实现，采用 **MQTT 协议** 构建一套完整的温湿度环境监测系统。
+
+### 核心功能
+
+| 模块 | 技术栈 | 功能说明 |
+|------|--------|----------|
+| 模拟器 | Python + Paho-MQTT | 生成模拟温湿度数据，通过 MQTT 发布到公共 Broker |
+| 后端 | Spring Boot + Eclipse Paho | 订阅 MQTT 数据，完成滤波、报警判断、WebSocket 推送 |
+| 前端 | Vue 3 + ECharts | 实时曲线展示、状态监控、报警记录显示 |
+
+---
+
+## PPT 汇报结构（10 页）
+
+| 页码 | 标题 | 时长 | 核心内容 |
+|------|------|------|----------|
+| 1 | 项目介绍 | 30秒 | 项目概述、核心功能、系统架构图 |
+| 2 | MQTT vs TCP | 1.5分钟 | 对比表、选择 MQTT 的 5 个理由 |
+| 3 | 系统架构设计 | 1分钟 | 四层架构、数据流向图、模块职责 |
+| 4 | 数据格式设计 | 1分钟 | JSON 结构、字段说明、选择 JSON 的理由 |
+| 5 | 异常数据模拟 | 1.5分钟 | 跳变、丢包、离线模拟代码 |
+| 6 | 数据滤波处理 | 2分钟 | 滑动平均滤波、跳变检测、丢包检测 |
+| 7 | 断线自动重连 | 1分钟 | 指数退避重连策略、代码实现 |
+| 8 | 报警逻辑设计 | 1分钟 | 阈值配置、报警类型、诊断建议 |
+| 9 | 前端展示效果 | 1分钟 | 界面功能演示 |
+| 10 | 项目总结 | 1分钟 | 考核点回顾、技术收获 |
+
+> **详细汇报稿见** `docs/PPT汇报稿.md`
+
+---
+
+## 核心考核点对应
+
+| 考核重点 | 本项目实现 |
+|----------|------------|
+| MQTT vs TCP 对比 | `docs/系统设计说明.md` |
+| JSON 数据格式设计 | `docs/接口协议说明.md` |
+| 断线自动重连机制 | Python 指数退避重连 + Spring Boot Paho |
+| 异常数据处理 | 跳变检测、丢包检测、滑动平均滤波 |
+
+---
 
 ## 项目结构
 
-```text
-sensor-simulator/  Python 模拟温湿度传感器与 MQTT 发布端
-iot-backend/       Spring Boot 后端：MQTT 订阅、滤波、报警、WebSocket 推送
-iot-frontend/      Vue + ECharts 前端大屏
-docs/              系统设计、接口协议、运行说明、测试说明、答辩防守说明
-PPT/               白色背景项目汇报 PPT
-docker-compose.yml Docker 一键部署文件
+```
+finalwork/
+├── sensor-simulator/           # Python MQTT 发布端
+│   ├── mqtt_publisher.py      # 发布端（命令行彩色输出）
+│   └── mqtt_subscriber_gui.py # GUI 订阅端（可视化界面）
+├── iot-backend/               # Spring Boot 后端（控制台彩色日志）
+├── iot-frontend/             # Vue 3 前端（实时曲线 + 报警动画）
+├── docs/                     # 设计文档
+│   ├── PPT汇报稿.md          # PPT 每页内容指南
+│   └── 答辩防守问题.md       # 答辩问题参考答案
+└── docker-compose.yml        # Docker 一键部署
 ```
 
-## 推荐运行方式一：Docker 一键启动
+---
+
+## 演示效果（录屏必备）
+
+### 三端同时运行效果
+
+| 终端 | 输出内容 |
+|------|----------|
+| Publisher | 彩色控制台日志（数据发送、异常状态） |
+| Backend | 彩色控制台日志（MQTT连接、数据处理、报警触发） |
+| Frontend | Vue 大屏（曲线绘制、报警卡片变红） |
+
+### 推荐录屏步骤
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 步骤 1：启动后端 (Spring Boot)                              │
+│   cd iot-backend && mvn spring-boot:run                    │
+│   → 控制台显示彩色连接日志                                    │
+├─────────────────────────────────────────────────────────────┤
+│ 步骤 2：启动前端 (Vue)                                      │
+│   cd iot-frontend && npm run dev                           │
+│   → 浏览器打开 http://localhost:5173                        │
+├─────────────────────────────────────────────────────────────┤
+│ 步骤 3：启动模拟器 (Python)                                 │
+│   cd sensor-simulator && python mqtt_publisher.py --mode demo│
+│   → 控制台显示数据发送和报警日志                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 前端录屏要点
+
+录屏时重点展示：
+1. **曲线实时绘制** - 曲线随时间从左向右滚动
+2. **报警触发** - 数值超过阈值时卡片变红、曲线变色
+3. **状态指示** - 连接状态实时显示（绿色脉冲点）
+4. **数据表格** - 异常和丢包行高亮显示
+
+---
+
+## 快速启动
+
+### 方式一：Python GUI 可视化（推荐演示）
+
+**1. 安装依赖**：
+```bash
+cd sensor-simulator
+pip install -r requirements.txt
+```
+
+**2. 启动发布端（模拟传感器）**：
+```bash
+python mqtt_publisher.py --mode demo
+```
+控制台会显示彩色日志，实时展示数据发送和异常状态。
+
+**3. 启动 GUI 订阅端（可视化界面）**：
+```bash
+python mqtt_subscriber_gui.py
+```
+显示实时曲线、连接状态、报警提示。
+
+### 方式二：Vue 前端大屏
 
 ```bash
 docker compose up -d --build
 ```
 
 启动后访问：
-
 - 前端页面：http://localhost:5173
 - 后端健康检查：http://localhost:8080/api/health
-- EMQX 管理后台：http://localhost:18083，账号 admin，密码 public
+- EMQX 管理后台：http://localhost:18083（账号 admin，密码 public）
 
-## 运行方式二：本地分别启动
+### 本地分别启动
 
-后端：
-
+**后端**：
 ```bash
 cd iot-backend
 mvn spring-boot:run
 ```
 
-前端：
-
+**前端**：
 ```bash
 cd iot-frontend
-npm install
-npm run dev
+npm install && npm run dev
 ```
 
-模拟器：
-
+**模拟器**：
 ```bash
 cd sensor-simulator
 pip install -r requirements.txt
 python mqtt_publisher.py --mode demo
 ```
 
-## 核心考核点对应
+---
 
-1. MQTT 与 TCP 对比：见 `docs/系统设计说明.md` 和 PPT。
-2. JSON 数据格式设计：见 `docs/接口协议说明.md`。
-3. 断线自动重连：Python 发布端指数退避重连；Spring Boot 后端 Paho 自动重连并重订阅。
-4. 异常数据处理：模拟跳变、丢包、离线；后端通过滑动平均、阈值判断和 seq 序号处理。
+## 关键技术点速查
+
+### MQTT 协议核心概念
+
+| 概念 | 说明 |
+|------|------|
+| Broker | MQTT 服务器，负责转发消息 |
+| Topic | 主题，消息路由的依据 |
+| QoS 0 | 最多一次，不保证送达 |
+| QoS 1 | 至少一次，可能重复 |
+| QoS 2 | 恰好一次，保证唯一 |
+| Client ID | 客户端唯一标识 |
+| Keep Alive | 心跳间隔，检测连接状态 |
+
+### 滤波算法对比
+
+| 算法 | 优点 | 缺点 | 适用场景 |
+|------|------|------|----------|
+| 滑动平均 | 简单有效 | 滞后性 | 稳态信号 |
+| 卡尔曼滤波 | 最优估计 | 计算复杂 | 动态系统 |
+| 中值滤波 | 抗尖峰 | 计算量大 | 脉冲噪声 |
+
+### 考核要点速记
+
+**1. 为什么选择 MQTT 而不是 TCP？**
+- MQTT 提供发布/订阅模式、Topic 路由、QoS 保障、Keep Alive
+- TCP 需要自行实现心跳、消息路由、应用层协议
+
+**2. 为什么选择 JSON 而不是自定义格式？**
+- 可读性强、跨语言支持、自描述性、扩展性强
+- 本项目数据量小，可读性优先级更高
+
+**3. 断线重连机制是什么？**
+- Python：指数退避重连（1s → 2s → 4s → ... → 60s 上限）
+- Spring Boot：Eclipse Paho 内置自动重连
+
+**4. 如何处理异常数据？**
+- 跳变：阈值检测，标记 outlier
+- 丢包：seq 序号连续性检测
+- 噪声：滑动平均滤波平滑

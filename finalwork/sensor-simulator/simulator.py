@@ -120,3 +120,21 @@ class EnvironmentSimulator:
         if r < config.DROP_PROBABILITY + config.OFFLINE_PROBABILITY + config.JUMP_PROBABILITY:
             return "jump"
         return "normal"
+
+
+# ============================================
+# 数据状态枚举（供文档参考）
+# ============================================
+"""
+数据状态说明：
+
+| 状态 | 说明 | 触发条件 |
+|------|------|----------|
+| normal | 正常数据 | 无异常时 |
+| jump | 跳变异常 | 传感器故障、采样干扰 |
+| temp_high | 高温报警 | 温度 > 35°C |
+| humidity_high | 高湿报警 | 湿度 > 80% |
+| both_high | 复合报警 | 温湿度同时超标 |
+| lost | 丢包 | 本次不发送数据 |
+| offline | 设备离线 | 短暂断开连接 |
+"""
