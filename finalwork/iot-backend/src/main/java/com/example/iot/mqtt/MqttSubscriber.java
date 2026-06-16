@@ -1,6 +1,7 @@
 package com.example.iot.mqtt;
 
 import com.example.iot.model.SensorData;
+import com.example.iot.model.ProcessedSensorData;
 import com.example.iot.service.SensorDataService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
@@ -183,7 +184,7 @@ public class MqttSubscriber {
         );
     }
 
-    private void printProcessedData(var processed) {
+    private void printProcessedData(ProcessedSensorData processed) {
         if (processed == null) return;
 
         String alarmType = processed.getAlarmType();

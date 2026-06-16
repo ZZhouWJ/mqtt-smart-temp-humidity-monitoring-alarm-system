@@ -1,17 +1,6 @@
 <template>
   <div class="lottie-wrapper" :style="wrapperStyle">
-    <dotlottie-wc
-      v-if="loaded"
-      :src="resolvedSrc"
-      :loop="loop"
-      :autoplay="autoplay"
-      :speed="speed"
-      :background="'transparent'"
-      :style="{ width: '100%', height: '100%' }"
-      @load="onLoad"
-      @error="onError"
-    />
-    <component v-else-if="fallbackAnim" :is="fallbackAnim" />
+    <component v-if="fallbackAnim" :is="fallbackAnim" />
     <div v-else class="static-fallback">
       <div class="static-dot"></div>
     </div>
@@ -19,7 +8,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, h } from 'vue'
+import { computed, h } from 'vue'
 
 const props = defineProps({
   type: {
@@ -34,55 +23,13 @@ const props = defineProps({
   color: { type: String, default: '#00d9ff' },
 })
 
-// LottieFiles 精选免费动画 (从 lottiefiles.com CDN)
-const LOTTIE_LIBRARY = {
-  loading: 'https://lottie.host/4f3e8a62-3b4d-4a8e-9c1a-2e5f7d8c9b1a/loading-spinner.json',
-  dataflow: 'https://lottie.host/3a7c8b91-5d2e-4f6a-8b9c-1d4e7f8a9b2c/data-flow.json',
-  cloudsync: 'https://lottie.host/8b9c1d4e-7f2a-4d5b-9c8e-3a6f7b8c9d1e/cloud-sync.json',
-  success: 'https://lottie.host/5c8d9e2f-1a4b-4c7d-8e9f-2b5c6d7e8f9a/success-check.json',
-  sensor: 'https://lottie.host/2d3e4f5a-6b7c-4d8e-9f1a-3b4c5d6e7f8a/sensor-pulse.json',
-  alert: 'https://lottie.host/9e8f7a6b-5c4d-4e3f-9a2b-1c2d3e4f5a6b/alert-warning.json',
-  network: 'https://lottie.host/7a8b9c1d-2e3f-4a5b-8c6d-9e7f8a9b1c2d/network-pulse.json',
-  dashboard: 'https://lottie.host/4b5c6d7e-8f9a-4b1c-9d2e-3f4a5b6c7d8e/dashboard-monitor.json',
-  thermometer: 'https://lottie.host/6c7d8e9f-1a2b-4c3d-8e4f-5a6b7c8d9e1f/thermometer.json',
-  droplet: 'https://lottie.host/8d9e1f2a-3b4c-4d5e-8f6a-7b8c9d1e2f3a/droplet.json',
-  cpu: 'https://lottie.host/1a2b3c4d-5e6f-4a7b-8c8d-9e1f2a3b4c5d/cpu-chip.json',
-  bell: 'https://lottie.host/2b3c4d5e-6f7a-4b8c-9d9e-1f2a3b4c5d6e/bell-alert.json',
-  database: 'https://lottie.host/3c4d5e6f-7a8b-4c9d-8e1f-2a3b4c5d6e7f/database.json',
-  server: 'https://lottie.host/4d5e6f7a-8b9c-4d1e-8f2a-3b4c5d6e7f8a/server-rack.json',
-  wifi: 'https://lottie.host/5e6f7a8b-9c1d-4e2f-8a3b-4c5d6e7f8a9b/wifi-signal.json',
-  chart: 'https://lottie.host/6f7a8b9c-1d2e-4f3a-8b4c-5d6e7f8a9b1c/line-chart.json',
-  rocket: 'https://lottie.host/7a8b9c1d-2e3f-4a4b-8c5d-6e7f8a9b1c2d/rocket.json',
-  gear: 'https://lottie.host/8b9c1d2e-3f4a-4b5c-8d6e-7f8a9b1c2d3e/gear-spin.json',
-  shield: 'https://lottie.host/9c1d2e3f-4a5b-4c6d-8e7f-8a9b1c2d3e4f/shield.json',
-  mqtt: 'https://lottie.host/1d2e3f4a-5b6c-4d7e-8f8a-9b1c2d3e4f5a/mqtt-broker.json',
-  pulse: 'https://lottie.host/2e3f4a5b-6c7d-4e8f-8a9b-1c2d3e4f5a6b/pulse-wave.json',
-}
-
-const loaded = ref(false)
-const errored = ref(false)
-
-const resolvedSrc = computed(() => {
-  return props.src || LOTTIE_LIBRARY[props.type] || LOTTIE_LIBRARY.loading
-})
-
 const wrapperStyle = computed(() => ({
   width: props.size + 'px',
   height: props.size + 'px',
 }))
 
-function onLoad() {
-  loaded.value = true
-}
-
-function onError() {
-  errored.value = true
-  loaded.value = false
-}
-
-// 自绘 SVG 兜底动画
+// 自绘 SVG 动画，避免演示时依赖外部 Lottie CDN。
 const fallbackAnim = computed(() => {
-  if (!errored.value) return null
   const c = props.color
   const animations = {
     loading: () => h('svg', { viewBox: '0 0 50 50', class: 'spin-anim' }, [
@@ -139,10 +86,6 @@ const fallbackAnim = computed(() => {
     default: () => h('div', { class: 'static-dot' }),
   }
   return animations[props.type] || animations.default
-})
-
-onMounted(() => {
-  loaded.value = true
 })
 </script>
 
