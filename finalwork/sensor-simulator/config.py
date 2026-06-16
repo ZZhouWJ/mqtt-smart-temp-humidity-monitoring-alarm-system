@@ -1,10 +1,10 @@
 """模拟传感器端配置文件。
 
 本文件支持两种运行方式：
-1. 本地直接运行：使用默认公共 MQTT Broker broker.emqx.io；
+1. 本地直接运行：使用本地 Mosquitto MQTT Broker (localhost:1883)；
 2. Docker Compose 运行：通过环境变量把 MQTT_HOST 指向 emqx 容器。
 
-这样既方便课堂演示，也方便工程化一键部署。
+这样既方便本地演示，也方便工程化一键部署。
 """
 
 import os
