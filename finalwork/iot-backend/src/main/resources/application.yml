@@ -1,0 +1,16 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+mqtt:
+  broker: ${MQTT_BROKER:tcp://localhost:1883}
+  clientId: ${MQTT_CLIENT_ID:springboot-iot-backend-001}
+  topic: ${MQTT_TOPIC:iot/env/node001/data}
+
+alarm:
+  temperatureHigh: ${TEMP_HIGH_THRESHOLD:35.0}
+  humidityHigh: ${HUMIDITY_HIGH_THRESHOLD:80.0}
+
+filter:
+  windowSize: ${FILTER_WINDOW_SIZE:5}
+  maxTemperatureJump: ${MAX_TEMPERATURE_JUMP:8.0}
+  maxHumidityJump: ${MAX_HUMIDITY_JUMP:15.0}
