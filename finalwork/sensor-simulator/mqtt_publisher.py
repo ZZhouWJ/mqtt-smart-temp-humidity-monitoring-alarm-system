@@ -294,6 +294,7 @@ def main() -> None:
                 print(ColoredPrinter.warn(
                     f"设备离线模拟 (seq={packet.seq})"
                 ))
+                publisher.publish_packet(packet)
                 time.sleep(3)
                 continue
 

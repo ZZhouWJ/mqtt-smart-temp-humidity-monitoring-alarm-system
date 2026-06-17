@@ -42,13 +42,14 @@
         </div>
       </div>
       <div class="header-right">
-        <div class="status-block" :class="wsConnected ? 'ok' : 'bad'">
+        <div class="status-block" :class="connectionBlockClass">
           <div class="status-pulse">
-            <span class="pulse-dot" :style="{ color: wsConnected ? 'var(--color-success)' : 'var(--color-danger)' }"></span>
+            <span class="pulse-dot" :style="{ color: connectionDotColor }"></span>
           </div>
           <div class="status-info">
-            <div class="status-title">{{ wsConnected ? 'CONNECTED' : 'DISCONNECTED' }}</div>
-            <div class="status-meta mono">MQTT/TCP · Qos1</div>
+            <div class="status-title">{{ connectionStatusText }}</div>
+            <div class="status-meta mono">WEBSOCKET · BACKEND PUSH</div>
+            <div class="status-detail mono">{{ connectionDetailText }}</div>
           </div>
         </div>
         <div class="counter-block">
@@ -152,11 +153,23 @@ import LottieAnimation from '../components/LottieAnimation.vue'
 import { useSensorData } from '../composables/useSensorData'
 
 const {
-  latest, history, alarms, wsConnected, totalReceived, alarmCount,
+  latest, history, alarms, wsConnected, connectionStatus, totalReceived, alarmCount,
   timeLabels, rawTemps, filteredTemps, rawHumidities, filteredHumidities,
   displayTemp, displayHumidity, isTempAlarm, isHumidityAlarm, isActiveAlarm, hasActiveAlarm,
-  deviceStatusText, alarmStatusText,
+  deviceStatusText, alarmStatusText, connectionStatusText, connectionDetailText,
 } = useSensorData()
+
+const connectionBlockClass = computed(() => {
+  if (wsConnected.value) return 'ok'
+  if (connectionStatus.value === 'connecting' || connectionStatus.value === 'reconnecting') return 'warn'
+  return 'bad'
+})
+
+const connectionDotColor = computed(() => {
+  if (connectionBlockClass.value === 'ok') return 'var(--color-success)'
+  if (connectionBlockClass.value === 'warn') return 'var(--color-warning)'
+  return 'var(--color-danger)'
+})
 
 const isTempWarning = computed(() => {
   if (displayTemp.value === '--') return false
@@ -325,6 +338,7 @@ const isHumidityWarning = computed(() => {
 }
 
 .status-block.ok::before { background: var(--color-success); box-shadow: 0 0 8px var(--color-success); }
+.status-block.warn::before { background: var(--color-warning); box-shadow: 0 0 8px var(--color-warning); }
 .status-block.bad::before { background: var(--color-danger); box-shadow: 0 0 8px var(--color-danger); }
 
 .status-pulse {
@@ -344,11 +358,19 @@ const isHumidityWarning = computed(() => {
 }
 
 .status-block.ok .status-title { color: var(--color-success); }
+.status-block.warn .status-title { color: var(--color-warning); }
 .status-block.bad .status-title { color: var(--color-danger); }
 
 .status-meta {
   font-size: 9px;
   color: var(--color-text-tertiary);
+  margin-top: 2px;
+  letter-spacing: 0.1em;
+}
+
+.status-detail {
+  font-size: 9px;
+  color: var(--color-text-secondary);
   margin-top: 2px;
   letter-spacing: 0.1em;
 }

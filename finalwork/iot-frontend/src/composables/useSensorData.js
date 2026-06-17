@@ -6,17 +6,30 @@ const latest = ref(null)
 const history = ref([])
 const alarms = ref([])
 const wsConnected = ref(false)
+const connectionStatus = ref('disconnected')
+const reconnectAttempts = ref(0)
+const lastUpdateTime = ref('--')
 const totalReceived = ref(0)
 const alarmCount = ref(0)
 let socket = null
 let reconnectTimer = null
 let isInitialized = false
+let activeConsumers = 0
+let shouldReconnect = false
 
 const MAX_POINTS = 60
+const RECONNECT_DELAY_MS = 2000
+
+function formatDisplayTime(timestamp) {
+  if (!timestamp) return new Date().toLocaleTimeString('zh-CN', { hour12: false })
+  const text = String(timestamp)
+  return text.length >= 19 ? text.slice(11, 19) : text
+}
 
 function pushData(data) {
   totalReceived.value++
   latest.value = data
+  lastUpdateTime.value = formatDisplayTime(data.timestamp)
   history.value.push(data)
   if (history.value.length > MAX_POINTS) history.value.shift()
 
@@ -34,27 +47,52 @@ function pushData(data) {
   }
 }
 
+function scheduleReconnect() {
+  clearTimeout(reconnectTimer)
+  reconnectAttempts.value++
+  connectionStatus.value = 'reconnecting'
+  reconnectTimer = setTimeout(connectWs, RECONNECT_DELAY_MS)
+}
+
 function connectWs() {
+  clearTimeout(reconnectTimer)
+  connectionStatus.value = reconnectAttempts.value > 0 ? 'reconnecting' : 'connecting'
+
   socket = createSensorSocket({
-    onOpen: () => { wsConnected.value = true },
+    onOpen: () => {
+      wsConnected.value = true
+      connectionStatus.value = 'connected'
+      reconnectAttempts.value = 0
+    },
     onMessage: pushData,
     onClose: () => {
       wsConnected.value = false
-      reconnectTimer = setTimeout(connectWs, 2000)
+      socket = null
+      if (shouldReconnect) {
+        scheduleReconnect()
+      } else {
+        connectionStatus.value = 'disconnected'
+      }
     },
-    onError: () => { wsConnected.value = false },
+    onError: () => {
+      wsConnected.value = false
+      connectionStatus.value = shouldReconnect ? 'reconnecting' : 'disconnected'
+    },
   })
 }
 
 async function init() {
   if (isInitialized) return
   isInitialized = true
+  shouldReconnect = true
+  connectionStatus.value = 'connecting'
   try {
     history.value = (await fetchHistory()).slice(-MAX_POINTS)
     alarms.value = await fetchAlarms()
     alarmCount.value = alarms.value.length
     totalReceived.value = history.value.length
     latest.value = history.value[history.value.length - 1] || null
+    if (latest.value) lastUpdateTime.value = formatDisplayTime(latest.value.timestamp)
   } catch (err) {
     console.warn('初始化历史数据失败', err)
   }
@@ -62,15 +100,25 @@ async function init() {
 }
 
 function cleanup() {
+  shouldReconnect = false
   clearTimeout(reconnectTimer)
+  reconnectTimer = null
   socket?.close()
   socket = null
+  wsConnected.value = false
+  connectionStatus.value = 'disconnected'
   isInitialized = false
 }
 
 export function useSensorData() {
-  onMounted(init)
-  onBeforeUnmount(cleanup)
+  onMounted(() => {
+    activeConsumers++
+    init()
+  })
+  onBeforeUnmount(() => {
+    activeConsumers = Math.max(0, activeConsumers - 1)
+    if (activeConsumers === 0) cleanup()
+  })
 
   const timeLabels = computed(() => history.value.map(x => (x.timestamp || '').slice(11)))
   const rawTemps = computed(() => history.value.map(x => x.rawTemperature))
@@ -106,10 +154,27 @@ export function useSensorData() {
     return map[type] || '--'
   })
 
+  const connectionStatusText = computed(() => {
+    const map = {
+      connected: 'CONNECTED',
+      connecting: 'CONNECTING',
+      reconnecting: 'RECONNECTING',
+      disconnected: 'DISCONNECTED',
+    }
+    return map[connectionStatus.value] || 'DISCONNECTED'
+  })
+
+  const connectionDetailText = computed(() => {
+    if (connectionStatus.value === 'connected') return `LAST ${lastUpdateTime.value}`
+    if (connectionStatus.value === 'reconnecting') return `RETRY ${reconnectAttempts.value} · ${RECONNECT_DELAY_MS / 1000}S`
+    if (connectionStatus.value === 'connecting') return 'OPENING SOCKET'
+    return 'WAITING BACKEND'
+  })
+
   return {
-    latest, history, alarms, wsConnected, totalReceived, alarmCount,
+    latest, history, alarms, wsConnected, connectionStatus, reconnectAttempts, lastUpdateTime, totalReceived, alarmCount,
     timeLabels, rawTemps, filteredTemps, rawHumidities, filteredHumidities,
     displayTemp, displayHumidity, isTempAlarm, isHumidityAlarm, isActiveAlarm, hasActiveAlarm,
-    deviceStatusText, alarmStatusText,
+    deviceStatusText, alarmStatusText, connectionStatusText, connectionDetailText,
   }
 }
